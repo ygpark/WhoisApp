@@ -8,37 +8,139 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script>
+
+    window.$ = window.jQuery = require('jquery');
+
+    var request = require("request");
+    var API_KEY = "2016080409332447715331";
+    
+    var IPS_ARRAY;
+    var IPS_POINTER = 0;
+    var IPS_END = 0;
+    var RESULT_HEADER = "<table class='table'>";
+    RESULT_HEADER += "<thead><tr>";
+    //RESULT_HEADER += "<th>no</th>";
+    RESULT_HEADER += "<th>IP</th>";
+    RESULT_HEADER += "<th>국가</th>";
+    RESULT_HEADER += "<th>기관명(1)</th>";
+    RESULT_HEADER += "<th>기관명(2)</th>";
+    RESULT_HEADER += "</tr></thead>";
+
+    var RESULT_BODY = "";
+    var RESULT_FOOTER = "</tbody></table>";
+    var RESULT_CSV = "";
+
+    function loadpage_csv(){
+      var fs = require('fs');
+      var data = fs.readFileSync('./csv.html', 'utf8');
+      $('.container').html(data);
+    }
+
+    function loadpage_text(){
+      var fs = require('fs');
+      var data = fs.readFileSync('./text.html', 'utf8');
+      $('.container').html(data);
+    }
+
+    function loadpage_intro(){
+      var fs = require('fs');
+      var data = fs.readFileSync('./intro.html', 'utf8');
+      $('.container').html(data);
+    }
+
+    function searchByText(){
+      //var ips = $("#txtbox_ips").val();
+      var ips = "61.40.211.106\n1.254.66.46";
+      IPS_ARRAY = ips.split("\n");
+      IPS_END = IPS_ARRAY.length;
+      whois_async(IPS_ARRAY);
+    }
+
+    function whois_async(IPS_ARRAY){
+      //초기화
+      IPS_POINTER = 0;
+      RESULT_BODY = "";
+      RESULT_CSV = "";
+      
+      //쿼리
+      var uri = "http://whois.kisa.or.kr/openapi/whois.jsp?query=" + IPS_ARRAY[0] + "&key=" + API_KEY + "&answer=json";
+      request({uri: uri,}, whois_handler);
+    }
+
+    function whois_handler(error, response, body) {
+
+      var whois = JSON.parse(body).whois;
+      RESULT_BODY += "<tr>";
+      RESULT_BODY += "<td>" + whois.query + "</td>";
+      RESULT_BODY += "<td>" + whois.countryCode + "</td>";
+
+      RESULT_CSV += whois.query + ",";
+      RESULT_CSV += whois.countryCode + ",";
+
+      if(whois.korean && whois.korean.ISP) {
+        var ISP = whois.korean.ISP;
+        RESULT_BODY += "<td>" + ISP.netinfo.orgName + "</td>";
+        RESULT_CSV += ISP.netinfo.orgName + ",";
+      } else {
+        RESULT_BODY += "<td></td>";
+        RESULT_CSV += ",";
+      }
+      
+      if(whois.korean && whois.korean.user) {
+        var user = whois.korean.user;
+        RESULT_BODY += "<td>" + user.netinfo.orgName + "</td>";
+        RESULT_CSV += user.netinfo.orgName + ",";
+      } else {
+        RESULT_BODY += "<td></td>";
+        RESULT_CSV += ",";
+      }
+
+      RESULT_BODY += "</tr>";
+
+      //재귀호출
+      IPS_POINTER++;
+      if(IPS_END != IPS_POINTER) {
+        var uri = "http://whois.kisa.or.kr/openapi/whois.jsp?query=" + IPS_ARRAY[IPS_POINTER] + "&key=" + API_KEY + "&answer=json";
+        request({uri: uri,}, whois_handler);
+      } else {
+        $(".container").html(RESULT_HEADER +RESULT_BODY + RESULT_FOOTER );
+      }
+    }
+
+    $(document).ready(function(){
+      loadpage_intro();
+    });
+
+  </script>
 </head>
 <body>
 
 <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
   <!-- Brand/logo -->
-  <a class="navbar-brand" href="#">Whois App</a>
+  <a class="navbar-brand" href="#" onClick="loadpage_intro()">Whois App</a>
   
   <!-- Links -->
   <ul class="navbar-nav">
     <li class="nav-item">
-      <a class="nav-link" href="#">+TEXT</a>
+      <a class="nav-link" onClick="loadpage_text()">SEARCH</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="#">+CSV</a>
+        <a class="nav-link" onClick="loadpage_text()">SEARCH+</a>
+      </li>
+    <!-- <li class="nav-item">
+      <a class="nav-link" onClick="loadpage_csv()">+CSV</a>
+    </li> -->
+    <li class="nav-item">
+      <a class="nav-link" href="#">SAVE</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="#"></a>
-    </li>
+        <a class="nav-link" href="#">HISTORY</a>
+      </li>
   </ul>
 </nav>
 
 <div class="container">
-	<div class="jumbotron">
-	<h1>Whois App 사용법</h1>      
-	<b>Whois 서비스란? </b>
-	<p> App은 국가 인터넷주소(도메인, IP주소/AS번호) 관리기관인 한국인터넷진흥원이 제공하는 인터넷주소의 등록ㆍ할당 정보 검색 서비스입니다.</p>
-	<b>Whois App을 사용하면 Whois 검색을 대량으로 할 수 있습니다.</b>
-	</div>
-	<p><a href="text.html"><button type="button" class="btn btn-primary">+TEXT</button></a> <span style="margin-left:20px">줄바꿈으로 구분된 IP주소를 조회합니다.</span></p>
-	<p><br/></p>
-	<p><a href="csv.html"><button type="button" class="btn btn-primary">+CSV</button></a> <span style="margin-left:20px">엑셀의 CSV형식 파일을 불러옵니다.</span></p>
 </div>
 
 </body>
