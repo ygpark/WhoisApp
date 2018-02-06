@@ -19,7 +19,7 @@ function createWindow () {
   }))
 
   // Open the DevTools.
-  //win.webContents.openDevTools()
+  win.webContents.openDevTools()
   
   // Emitted when the window is closed.
   win.on('closed', () => {
@@ -54,3 +54,18 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+const ipc = require('electron').ipcMain
+const dialog = require('electron').dialog
+
+ipc.on('save-dialog', function (event) {
+  const options = {
+    title: 'Save',
+    filters: [
+      { name: 'CSV(Comma Seperated Value)', extensions: ['csv'] }
+    ]
+  }
+  dialog.showSaveDialog(options, function (filename) {
+    event.sender.send('saved-file', filename)
+  })
+})

@@ -4,13 +4,14 @@
   <title>Whois App</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="./jquery/3.2.1/jquery.min.js"></script>
+  <script>window.$ = window.jQuery = require('jquery');</script>
+  <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"> -->
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
+  <link rel="stylesheet" href="./bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="./bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  
   <script>
-
-    window.$ = window.jQuery = require('jquery');
 
     var request = require("request");
     var API_KEY = "2016080409332447715331";
@@ -18,6 +19,8 @@
     var IPS_ARRAY;
     var IPS_POINTER = 0;
     var IPS_END = 0;
+
+    //결과값 화면 출력용 변수
     var RESULT_HEADER = "<table class='table'>";
     RESULT_HEADER += "<thead><tr>";
     //RESULT_HEADER += "<th>no</th>";
@@ -26,77 +29,170 @@
     RESULT_HEADER += "<th>기관명(1)</th>";
     RESULT_HEADER += "<th>기관명(2)</th>";
     RESULT_HEADER += "</tr></thead>";
-
     var RESULT_BODY = "";
     var RESULT_FOOTER = "</tbody></table>";
-    var RESULT_CSV = "";
+    
+    //결과값 CSV파일 저장용 변수
+    var RESULT_CSV_HEADER = "IP,국가,기관명(1),기관명(2)\n";
+    var RESULT_CSV_BODY = "";
 
-    function loadpage_csv(){
-      var fs = require('fs');
-      var data = fs.readFileSync('./csv.html', 'utf8');
-      $('.container').html(data);
-    }
-
-    function loadpage_text(){
-      var fs = require('fs');
-      var data = fs.readFileSync('./text.html', 'utf8');
-      $('.container').html(data);
+    function initialize(){
+      RESULT_CSV_BODY="";
+      RESULT_BODY="";
     }
 
     function loadpage_intro(){
-      var fs = require('fs');
-      var data = fs.readFileSync('./intro.html', 'utf8');
-      $('.container').html(data);
+      initialize();
+      var subpage = '\
+        <div class="jumbotron text-center" style="margin-top:50px; min-width:400px;">\
+        <h1>Whois 검색</h1>\
+        <br/>\
+        <p><input type="text" id="txtSinglIP" value="1.254.66.46" style="text-align:center;"/>\
+        <button type="button" class="btn btn-primary" onClick="searchIP()">SEARCH</button></p> \
+        </div>\
+        ';
+      $('.container').html(subpage);
+      $("#nav_li01").addClass("active");
+      $("#nav_li02").removeClass("active");
+      $("#nav_li03").removeClass("active");
     }
 
-    function searchByText(){
-      //var ips = $("#txtbox_ips").val();
-      var ips = "61.40.211.106\n1.254.66.46";
+    function loadpage_text(){
+      initialize();
+      var subpage = '\
+      <textarea id="txtbox_ips" style="width:100%; max-width:100%; min-height:500px;" placeholder="한 줄에 IP주소 하나씩 입력하세요">61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46</textarea>\
+      <div class="text-center">\
+      <button type="button" class="btn btn-primary btn-block" onClick="searchIPs()">검색</button>\
+      </div>\
+      ';
+      $('.container').html(subpage);
+      $("#nav_li01").removeClass("active");
+      $("#nav_li02").addClass("active");
+      $("#nav_li03").removeClass("active");
+    }
+
+    function loadpage_progress(){
+      initialize();
+      var subpage = '\
+      <br/><br/><br/>\
+      <h2>처리중</h2>\
+      <div class="progress">\
+      <div id="progress-bar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">\
+      </div>\
+      </div>\
+      ';
+      $('.container').html(subpage);
+    }
+
+    //저장
+    function save_as_csv(){
+      if(RESULT_CSV_BODY) {
+        const ipc = require('electron').ipcRenderer;
+        ipc.send('save-dialog');
+
+        ipc.on('saved-file', function (event, path) {
+          if (path) {
+            var fs = require('fs');
+            fs.writeFileSync(path, "\ufeff" + RESULT_CSV_HEADER + RESULT_CSV_BODY, 'utf8');
+          }
+        });
+      }
+      
+    }
+
+    function searchIP(){
+
+      //검색어 가져오기
+      var ip = $("#txtSinglIP").val();
+
+      //초기화
+      RESULT_BODY = "";
+
+      //검색
+      var uri = "http://whois.kisa.or.kr/openapi/whois.jsp?query=" + ip + "&key=" + API_KEY + "&answer=json";
+      request({uri: uri,}, function(error, response, body){
+        var whois = JSON.parse(body).whois;
+        RESULT_BODY += "<tr>";
+        RESULT_BODY += "<td>" + whois.query + "</td>";
+        RESULT_BODY += "<td>" + whois.countryCode + "</td>";
+        if(whois.korean && whois.korean.ISP) {
+          var ISP = whois.korean.ISP;
+          RESULT_BODY += "<td>" + ISP.netinfo.orgName + "</td>";
+        } else {
+          RESULT_BODY += "<td></td>";
+        }
+        
+        if(whois.korean && whois.korean.user) {
+          var user = whois.korean.user;
+          RESULT_BODY += "<td>" + user.netinfo.orgName + "</td>";
+        } else {
+          RESULT_BODY += "<td></td>";
+        }
+
+        RESULT_BODY += "</tr>";
+
+        $(".container").html(RESULT_HEADER +RESULT_BODY + RESULT_FOOTER );
+      });
+      
+    }
+
+    function searchIPs(){
+
+      var ips = $("#txtbox_ips").val();
       IPS_ARRAY = ips.split("\n");
+      IPS_ARRAY = Array.from(new Set(IPS_ARRAY));
       IPS_END = IPS_ARRAY.length;
       whois_async(IPS_ARRAY);
     }
 
+    //검색 시작
     function whois_async(IPS_ARRAY){
+      IPS_ARRAY
       //초기화
       IPS_POINTER = 0;
       RESULT_BODY = "";
-      RESULT_CSV = "";
+      RESULT_CSV_BODY = "";
+      //프로그래스바 보여주기
+      loadpage_progress();
       
       //쿼리
       var uri = "http://whois.kisa.or.kr/openapi/whois.jsp?query=" + IPS_ARRAY[0] + "&key=" + API_KEY + "&answer=json";
       request({uri: uri,}, whois_handler);
     }
 
+    //이벤트 핸들러
     function whois_handler(error, response, body) {
+
+      var percent = (IPS_POINTER+1) / IPS_END * 100 ;
+      $("#progress-bar").width(percent+"%");
 
       var whois = JSON.parse(body).whois;
       RESULT_BODY += "<tr>";
       RESULT_BODY += "<td>" + whois.query + "</td>";
       RESULT_BODY += "<td>" + whois.countryCode + "</td>";
 
-      RESULT_CSV += whois.query + ",";
-      RESULT_CSV += whois.countryCode + ",";
+      RESULT_CSV_BODY += whois.query + ",";
+      RESULT_CSV_BODY += whois.countryCode + ",";
 
       if(whois.korean && whois.korean.ISP) {
         var ISP = whois.korean.ISP;
         RESULT_BODY += "<td>" + ISP.netinfo.orgName + "</td>";
-        RESULT_CSV += ISP.netinfo.orgName + ",";
+        RESULT_CSV_BODY += ISP.netinfo.orgName + ",";
       } else {
         RESULT_BODY += "<td></td>";
-        RESULT_CSV += ",";
+        RESULT_CSV_BODY += ",";
       }
       
       if(whois.korean && whois.korean.user) {
         var user = whois.korean.user;
         RESULT_BODY += "<td>" + user.netinfo.orgName + "</td>";
-        RESULT_CSV += user.netinfo.orgName + ",";
+        RESULT_CSV_BODY += user.netinfo.orgName + ",";
       } else {
         RESULT_BODY += "<td></td>";
-        RESULT_CSV += ",";
       }
 
       RESULT_BODY += "</tr>";
+      RESULT_CSV_BODY += "\n"
 
       //재귀호출
       IPS_POINTER++;
@@ -108,6 +204,8 @@
       }
     }
 
+  
+
     $(document).ready(function(){
       loadpage_intro();
     });
@@ -116,29 +214,28 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
-  <!-- Brand/logo -->
-  <a class="navbar-brand" href="#" onClick="loadpage_intro()">Whois App</a>
-  
-  <!-- Links -->
-  <ul class="navbar-nav">
-    <li class="nav-item">
-      <a class="nav-link" onClick="loadpage_text()">SEARCH</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" onClick="loadpage_text()">SEARCH+</a>
-      </li>
-    <!-- <li class="nav-item">
-      <a class="nav-link" onClick="loadpage_csv()">+CSV</a>
-    </li> -->
-    <li class="nav-item">
-      <a class="nav-link" href="#">SAVE</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="#">HISTORY</a>
-      </li>
-  </ul>
-</nav>
+  <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>                        
+        </button>
+        <a class="navbar-brand" href="#">Whois App</a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+          <li id="nav_li01" class="active"><a href="#" onClick="loadpage_intro()">홈</a></li>
+          <li id="nav_li02" ><a href="#" onClick="loadpage_text()">대량조회</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#" onClick="save_as_csv()"><span class="glyphicon glyphicon-download-alt"></span> Save</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
 
 <div class="container">
 </div>
