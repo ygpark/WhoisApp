@@ -1,17 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Whois App</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="./jquery/3.2.1/jquery.min.js"></script>
-  <script>window.$ = window.jQuery = require('jquery');</script>
-  <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"> -->
-  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
-  <link rel="stylesheet" href="./bootstrap/3.3.7/css/bootstrap.min.css">
-  <script src="./bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  
-  <script>
+	<title>Whois App</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="./jquery/3.2.1/jquery.min.js"></script>
+		<script>window.$ = window.jQuery = require('jquery');</script>
+		<link rel="stylesheet" href="./bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="./bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script>
 
     var request = require("request");
     var API_KEY = "2016080409332447715331";
@@ -42,122 +39,165 @@
     }
 
     function loadpage_intro(){
-      initialize();
-      var subpage = '\
-        <div class="jumbotron text-center" style="margin-top:50px; min-width:400px;">\
-        <h1>Whois 검색</h1>\
-        <br/>\
-        <p><input type="text" id="txtSinglIP" value="1.254.66.46" style="text-align:center;"/>\
-        <button type="button" class="btn btn-primary" onClick="searchIP()">SEARCH</button></p> \
-        </div>\
-        ';
-      $('.container').html(subpage);
-      $("#nav_li01").addClass("active");
-      $("#nav_li02").removeClass("active");
-      $("#nav_li03").removeClass("active");
+		initialize();
+		var subpage = '\
+		<div class="jumbotron text-center" style="margin-top:50px; min-width:400px;">\
+		<h1>Whois 검색</h1>\
+		<br/>\
+		<p><input type="text" id="txtSinglIP" placeholder="IP주소를 입력하세요" value="" style="text-align:center;"/>\
+		<button type="button" class="btn btn-primary" onClick="searchIP()">SEARCH</button></p> \
+		</div>\
+		';
+		$('.container').html(subpage);
+		$("#nav_li01").addClass("active");
+		$("#nav_li02").removeClass("active");
+		$("#nav_li03").removeClass("active");
+    }
+	
+	function loadpage_info(){
+		initialize();
+		var subpage = '\
+		<div class="jumbotron text-center" style="margin-top:50px; min-width:400px;">\
+		<h3 style="text-align:left">제작자</h3>\
+		<br/>\
+		<p style="text-align:left">- 소  속: 경남지방경찰청 사이버수사대</p>\
+		<p style="text-align:left">- 이  름: 박영기</p>\
+		<p style="text-align:left">- 전  화: 59-2770 (055-233-2770)</p>\
+		<p style="text-align:left">- 이메일: ghostyak@police.go.kr</p>\
+		</div>\
+		';
+		$('.container').html(subpage);
+		$("#nav_li01").removeClass("active");
+		$("#nav_li02").removeClass("active");
+		$("#nav_li03").addClass("active");
     }
 
     function loadpage_text(){
-      initialize();
-      var subpage = '\
-      <textarea id="txtbox_ips" style="width:100%; max-width:100%; min-height:500px;" placeholder="한 줄에 IP주소 하나씩 입력하세요">61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46&#13;&#10;61.40.211.106&#13;&#10;1.254.66.46</textarea>\
-      <div class="text-center">\
-      <button type="button" class="btn btn-primary btn-block" onClick="searchIPs()">검색</button>\
-      </div>\
-      ';
-      $('.container').html(subpage);
-      $("#nav_li01").removeClass("active");
-      $("#nav_li02").addClass("active");
-      $("#nav_li03").removeClass("active");
+		initialize();
+		var subpage = '\
+		<textarea id="txtbox_ips" style="width:100%; max-width:100%; min-height:500px;" placeholder="#한 줄에 IP주소 하나씩 입력하세요\n1.1.1.1\n1.1.1.2\n1.1.1.3"></textarea>\
+		<div class="text-center">\
+		<button type="button" class="btn btn-primary btn-block" onClick="start()">검색</button>\
+		</div>\
+		';
+		$('.container').html(subpage);
+		$("#nav_li01").removeClass("active");
+		$("#nav_li02").addClass("active");
+		$("#nav_li03").removeClass("active");
     }
 
     function loadpage_progress(){
-      initialize();
-      var subpage = '\
-      <br/><br/><br/>\
-      <h2>처리중</h2>\
-      <div class="progress">\
-      <div id="progress-bar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">\
-      </div>\
-      </div>\
-      ';
-      $('.container').html(subpage);
+		initialize();
+		var subpage = '\
+		<br/><br/><br/>\
+		<h2>처리중</h2>\
+		<div class="progress">\
+		<div id="progress-bar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">\
+		</div>\
+		</div>\
+		';
+		$('.container').html(subpage);
     }
 
     //저장
     function save_as_csv(){
-      if(RESULT_CSV_BODY) {
-        const ipc = require('electron').ipcRenderer;
-        ipc.send('save-dialog');
+		if(RESULT_CSV_BODY) {
+			const ipc = require('electron').ipcRenderer;
+			ipc.send('save-dialog');
 
-        ipc.on('saved-file', function (event, path) {
-          if (path) {
-            var fs = require('fs');
-            fs.writeFileSync(path, "\ufeff" + RESULT_CSV_HEADER + RESULT_CSV_BODY, 'utf8');
-          }
-        });
-      }
-      
+			ipc.on('saved-file', function (event, path) {
+				if (path) {
+					var fs = require('fs');
+					fs.writeFileSync(path, "\ufeff" + RESULT_CSV_HEADER + RESULT_CSV_BODY, 'utf8');
+				}
+			});
+		}
     }
 
     function searchIP(){
 
-      //검색어 가져오기
-      var ip = $("#txtSinglIP").val();
+		//검색어 가져오기
+		var ip = $("#txtSinglIP").val().trim();
 
-      //초기화
-      RESULT_BODY = "";
+		if(checkIP(ip) == false) {
+		alert("입력한 정보가 IP주소 형식과 다릅니다.");
+		return;
+		}
 
-      //검색
-      var uri = "http://whois.kisa.or.kr/openapi/whois.jsp?query=" + ip + "&key=" + API_KEY + "&answer=json";
-      request({uri: uri,}, function(error, response, body){
-        var whois = JSON.parse(body).whois;
-        RESULT_BODY += "<tr>";
-        RESULT_BODY += "<td>" + whois.query + "</td>";
-        RESULT_BODY += "<td>" + whois.countryCode + "</td>";
-        if(whois.korean && whois.korean.ISP) {
-          var ISP = whois.korean.ISP;
-          RESULT_BODY += "<td>" + ISP.netinfo.orgName + "</td>";
-        } else {
-          RESULT_BODY += "<td></td>";
-        }
-        
-        if(whois.korean && whois.korean.user) {
-          var user = whois.korean.user;
-          RESULT_BODY += "<td>" + user.netinfo.orgName + "</td>";
-        } else {
-          RESULT_BODY += "<td></td>";
-        }
+		//초기화
+		RESULT_BODY = "";
 
-        RESULT_BODY += "</tr>";
+		//검색
+		var uri = "http://whois.kisa.or.kr/openapi/whois.jsp?query=" + ip + "&key=" + API_KEY + "&answer=json";
+		request({uri: uri,}, function(error, response, body){
+			var whois = JSON.parse(body).whois;
+			RESULT_BODY += "<tr>";
+			RESULT_BODY += "<td>" + whois.query + "</td>";
+			RESULT_BODY += "<td>" + whois.countryCode + "</td>";
+			if(whois.korean && whois.korean.ISP) {
+				var ISP = whois.korean.ISP;
+				RESULT_BODY += "<td>" + ISP.netinfo.orgName + "</td>";
+			} else {
+				RESULT_BODY += "<td></td>";
+			}
 
-        $(".container").html(RESULT_HEADER +RESULT_BODY + RESULT_FOOTER );
-      });
+			if(whois.korean && whois.korean.user) {
+				var user = whois.korean.user;
+				RESULT_BODY += "<td>" + user.netinfo.orgName + "</td>";
+			} else {
+				RESULT_BODY += "<td></td>";
+			}
+
+			RESULT_BODY += "</tr>";
+
+			$(".container").html(RESULT_HEADER +RESULT_BODY + RESULT_FOOTER );
+		});
       
     }
 
-    function searchIPs(){
+	
+	function checkIP(strIP) {
+		var expUrl = /^(1|2)?\d?\d([.](1|2)?\d?\d){3}$/;
+		return expUrl.test(strIP);
+	}
 
-      var ips = $("#txtbox_ips").val();
-      ips = ips.trim();
-      IPS_ARRAY = ips.split("\n");
-      IPS_ARRAY = Array.from(new Set(IPS_ARRAY));
-      IPS_END = IPS_ARRAY.length;
-      whois_async(IPS_ARRAY);
+	
+    function start(){
+
+		var ips = $("#txtbox_ips").val();
+		var verification = new Array();
+		
+		ips = ips.trim();
+		IPS_ARRAY = ips.split("\n");
+		
+		//IP주소 유효성 검사
+		for (var i = 0; i < IPS_ARRAY.length; i++) {
+			if(checkIP(IPS_ARRAY[i]) == true) {
+				verification.push(IPS_ARRAY[i]);
+			}
+		}
+
+		//중복 제거
+		IPS_ARRAY = Array.from(new Set(verification));
+		//프로그래스바를 위한 종료지점 저장
+		IPS_END = IPS_ARRAY.length;
+		
+		//검색시작
+		whois_search_async(IPS_ARRAY);
     }
 
     //검색 시작
-    function whois_async(IPS_ARRAY){
-      //초기화
-      IPS_POINTER = 0;
-      RESULT_BODY = "";
-      RESULT_CSV_BODY = "";
-      //프로그래스바 보여주기
-      loadpage_progress();
-      
-      //쿼리
-      var uri = "http://whois.kisa.or.kr/openapi/whois.jsp?query=" + IPS_ARRAY[0] + "&key=" + API_KEY + "&answer=json";
-      request({uri: uri,}, whois_handler);
+    function whois_search_async(IPS_ARRAY){
+		//초기화
+		IPS_POINTER = 0;
+		RESULT_BODY = "";
+		RESULT_CSV_BODY = "";
+		//프로그래스바 보여주기
+		loadpage_progress();
+
+		//쿼리
+		var uri = "http://whois.kisa.or.kr/openapi/whois.jsp?query=" + IPS_ARRAY[0] + "&key=" + API_KEY + "&answer=json";
+		request({uri: uri,}, whois_handler);
     }
 
     //이벤트 핸들러
@@ -222,15 +262,15 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>                        
         </button>
-        <a class="navbar-brand" href="#">Whois App</a>
       </div>
       <div class="collapse navbar-collapse" id="myNavbar">
         <ul class="nav navbar-nav">
-          <li id="nav_li01" class="active"><a href="#" onClick="loadpage_intro()">홈</a></li>
-          <li id="nav_li02" ><a href="#" onClick="loadpage_text()">대량조회</a></li>
+          <li id="nav_li01" class="active"><a href="#" onClick="loadpage_intro()">단일 검색</a></li>
+          <li id="nav_li02" ><a href="#" onClick="loadpage_text()">대량 검색</a></li>
+		  <li id="nav_li03" ><a href="#" onClick="loadpage_info()">정보</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
-          <li><a href="#" onClick="save_as_csv()"><span class="glyphicon glyphicon-download-alt"></span> Save</a></li>
+          <li><a href="#" onClick="save_as_csv()"><span class="glyphicon glyphicon-download-alt"></span> 저장(대량 검색용)</a></li>
         </ul>
       </div>
     </div>

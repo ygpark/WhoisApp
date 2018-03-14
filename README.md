@@ -1,9 +1,11 @@
-# helloworld-electron
+# whois-app
 
-# 설치
+# 다운로드
+
+# 개발자용 프로그램 설치방법
+
+```
 npm install electron -g
 npm install jquery
-
-# 실행
-electron ."# coinportfolrio-electron" 
-# whois-app
+electron .
+```
