@@ -139,6 +139,7 @@
     function searchIPs(){
 
       var ips = $("#txtbox_ips").val();
+      ips = ips.trim();
       IPS_ARRAY = ips.split("\n");
       IPS_ARRAY = Array.from(new Set(IPS_ARRAY));
       IPS_END = IPS_ARRAY.length;
@@ -147,7 +148,6 @@
 
     //검색 시작
     function whois_async(IPS_ARRAY){
-      IPS_ARRAY
       //초기화
       IPS_POINTER = 0;
       RESULT_BODY = "";
